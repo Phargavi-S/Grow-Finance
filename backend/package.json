@@ -1,0 +1,28 @@
+{
+  "name": "billing-backend",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "seed:items": "node tools/seedSectionsAndItems.js",
+    "seed:vendors": "node seedVendors.js",
+    "quick:invoice": "node tools/quickCreateInvoice.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-session": "^1.19.0",
+    "html-pdf": "^1.5.0",
+    "mongoose": "^8.0.0",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^8.0.5",
+    "pdfkit": "^0.14.0",
+    "puppeteer": "^24.42.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
