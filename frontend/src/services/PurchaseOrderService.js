@@ -10,7 +10,7 @@ const remove = (id) => axios.delete(`${base}/${id}`, { withCredentials: true });
 const convertToBill = (id) => axios.post(`${base}/${id}/convert-to-bill`, {}, { withCredentials: true });
 const getStats = () => axios.get(`${base}/dashboard-stats`, { withCredentials: true });
 
-export default {
+const PurchaseOrderService = {
   getAll,
   getById,
   create,
@@ -19,3 +19,5 @@ export default {
   convertToBill,
   getStats
 };
+
+export default PurchaseOrderService;

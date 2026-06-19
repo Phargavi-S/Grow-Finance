@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 
 const InvoiceForm = ({ invoice, onSuccess, onCancel }) => {
@@ -73,7 +73,7 @@ const InvoiceForm = ({ invoice, onSuccess, onCancel }) => {
 
   const invoiceItemsWithAmounts = useMemo(
     () => invoiceItems.map((item) => ({ ...item, amount: calculateItemAmount(item) })),
-    [invoiceItems]
+    [invoiceItems, calculateItemAmount]
   );
 
   const totals = useMemo(() => {
