@@ -7,7 +7,7 @@ console.log('\n========================================');
 console.log(' GROW FINANCE');
 console.log('========================================');
 console.log(` PORT: ${process.env.PORT || 5000}`);
-console.log(` MONGO_URI: ${process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/billingDB'}`);
+console.log(' MongoDB configuration loaded');
 console.log('========================================\n');
 
 const express = require('express');
