@@ -25,7 +25,7 @@ const recurringRoutes = require('./routes/recurringRoutes');
 const app = express();
 
 // Use frontend URL from env (Vercel) or default to localhost for dev
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://grow-finance-6z1m.vercel.app';
 const IS_PROD = process.env.NODE_ENV === 'production';
 
 // When deployed behind a proxy (Render), trust the first proxy so secure cookies work
