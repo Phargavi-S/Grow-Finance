@@ -24,21 +24,31 @@ const recurringRoutes = require('./routes/recurringRoutes');
 
 const app = express();
 
+// Use frontend URL from env (Vercel) or default to localhost for dev
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+const IS_PROD = process.env.NODE_ENV === 'production';
+
+// When deployed behind a proxy (Render), trust the first proxy so secure cookies work
+if (IS_PROD) app.set('trust proxy', 1);
+
 // Session
 app.use(session({
   secret: process.env.SESSION_SECRET || 'billing_secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { 
-    secure: false,
+  cookie: {
+    // secure cookies in production (requires HTTPS). Keep false in dev.
+    secure: IS_PROD,
     httpOnly: true,
+    // allow cross-site cookies in production (frontend and backend are different hosts)
+    sameSite: IS_PROD ? 'none' : 'lax',
     maxAge: 24 * 60 * 60 * 1000
   }
 }));
 
-// CORS
+// CORS - allow requests from the configured frontend and credentials (cookies)
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: FRONTEND_URL,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

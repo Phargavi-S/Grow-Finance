@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../Layout/Sidebar';
 import Header from '../Layout/Header';
-import PurchaseOrderService from '../../services/PurchaseOrderService';
 import axios from 'axios';
 
 const PurchaseOrdersDashboard = ({ onLogout, user }) => {

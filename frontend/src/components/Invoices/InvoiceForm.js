@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
 
 const InvoiceForm = ({ invoice, onSuccess, onCancel }) => {
@@ -59,7 +59,7 @@ const InvoiceForm = ({ invoice, onSuccess, onCancel }) => {
     return Number.isNaN(number) ? 0 : number;
   };
 
-  const calculateItemAmount = ({ quantity, rate, discount, taxRate }) => {
+  const calculateItemAmount = useCallback(({ quantity, rate, discount, taxRate }) => {
     const qty = parseNumber(quantity);
     const rt = parseNumber(rate);
     const disc = parseNumber(discount);
@@ -69,7 +69,7 @@ const InvoiceForm = ({ invoice, onSuccess, onCancel }) => {
     const afterDiscount = base - discountAmount;
     const taxAmount = afterDiscount * (tax / 100);
     return parseFloat((afterDiscount + taxAmount).toFixed(2));
-  };
+  }, []);
 
   const invoiceItemsWithAmounts = useMemo(
     () => invoiceItems.map((item) => ({ ...item, amount: calculateItemAmount(item) })),
@@ -110,8 +110,7 @@ const InvoiceForm = ({ invoice, onSuccess, onCancel }) => {
     setInvoiceItems((prev) => [...prev, { itemId: '', name: '', quantity: 1, rate: 0, discount: 0, taxRate: 19 }]);
   };
 
-  const removeRow = (index) => setInvoiceItems((prev) => prev.filter((_, i) => i !== index));
-
+  
   const resetForm = () => {
     setSelectedCustomer('');
     setInvoiceItems([{ itemId: '', name: '', quantity: 1, rate: 0, discount: 0, taxRate: 19 }]);
