@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import Logo from './Logo';
 
 const PublicNavbar = ({ transparent = false }) => {
   const navigate = useNavigate();
@@ -14,10 +15,9 @@ const PublicNavbar = ({ transparent = false }) => {
   return (
     <nav className={`gf-navbar ${transparent ? 'gf-navbar-transparent' : ''}`}>
       <div className="gf-navbar-inner">
-        <Link to="/" className="gf-navbar-brand" onClick={() => setMenuOpen(false)}>
-          <span className="gf-brand-icon">◆</span>
-          GROW FINANCE
-        </Link>
+        <div onClick={() => setMenuOpen(false)}>
+          <Logo size="sm" variant="light" linkTo="/" />
+        </div>
 
         <button
           className="gf-navbar-toggle"
@@ -32,7 +32,6 @@ const PublicNavbar = ({ transparent = false }) => {
         <div className={`gf-navbar-links ${menuOpen ? 'open' : ''}`}>
           <button type="button" onClick={() => scrollTo('features')}>Features</button>
           <button type="button" onClick={() => scrollTo('benefits')}>Benefits</button>
-          <button type="button" onClick={() => scrollTo('stats')}>Statistics</button>
           <button type="button" onClick={() => scrollTo('footer')}>Contact</button>
           <button type="button" className="gf-btn-ghost" onClick={() => navigate('/login')}>
             Login

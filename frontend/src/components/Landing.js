@@ -1,15 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import PublicNavbar from './Common/PublicNavbar';
-import AnimatedCounter from './Common/AnimatedCounter';
+import Logo from './Common/Logo';
 import {
   FiBarChart2, FiBox, FiUsers, FiFileText,
   FiRepeat, FiTruck, FiShoppingCart
 } from 'react-icons/fi';
 
 const features = [
-  { icon: <FiBarChart2 />, title: 'Dashboard', desc: 'Real-time financial overview with revenue, invoices, and payment KPIs.' },
-  { icon: <FiBox />, title: 'Items', desc: 'Manage products and services with pricing, tax rules, and inventory details.' },
+  { icon: <FiBarChart2 />, title: 'Dashboard', desc: 'Real-time financial overview with revenue, invoices, and key business metrics.' },
+  { icon: <FiBox />, title: 'Items Management', desc: 'Manage products and services with pricing, tax rules, and inventory details.' },
   { icon: <FiUsers />, title: 'Customers', desc: 'Centralized customer profiles, contact details, and relationship history.' },
   { icon: <FiFileText />, title: 'Invoices', desc: 'Create professional invoices, track status, and export to PDF.' },
   { icon: <FiRepeat />, title: 'Recurring Invoices', desc: 'Automated billing cycles for subscriptions and repeat clients.' },
@@ -93,26 +93,11 @@ const Landing = () => {
         </div>
       </section>
 
-      <section id="stats" className="gf-section">
-        <div className="gf-container">
-          <div className="gf-section-header">
-            <h2>Trusted by Businesses</h2>
-            <p>Numbers that speak for themselves</p>
-          </div>
-          <div className="gf-stats-grid">
-            <AnimatedCounter end={12500} suffix="+" label="Invoices Processed" />
-            <AnimatedCounter end={3200} suffix="+" label="Active Businesses" />
-            <AnimatedCounter end={98} suffix="%" label="Customer Satisfaction" />
-            <AnimatedCounter end={45} suffix="M+" label="Transactions Tracked" />
-          </div>
-        </div>
-      </section>
-
       <footer id="footer" className="gf-footer">
         <div className="gf-container">
           <div className="gf-footer-grid">
             <div className="gf-footer-brand">
-              <h3>GROW FINANCE</h3>
+              <Logo size="md" variant="light" linkTo={null} className="gf-footer-logo" />
               <p>Smart financial management for modern businesses. Simplify billing, grow faster.</p>
             </div>
             <div>
@@ -120,7 +105,6 @@ const Landing = () => {
               <ul>
                 <li><a href="#features">Our Platform</a></li>
                 <li><a href="#benefits">Why Choose Us</a></li>
-                <li><a href="#stats">Statistics</a></li>
               </ul>
             </div>
             <div>

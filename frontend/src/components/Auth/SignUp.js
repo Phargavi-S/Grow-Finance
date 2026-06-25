@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useToast } from '../Common/Toast';
+import Logo from '../Common/Logo';
+import PasswordInput from '../Common/PasswordInput';
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -61,7 +63,9 @@ const SignUp = () => {
     <div className="gf-auth-page">
       <div className="gf-auth-bg" />
       <div className="gf-auth-card gf-auth-card-wide">
-        <Link to="/" className="gf-auth-brand">GROW FINANCE</Link>
+        <div className="gf-auth-brand-wrap">
+          <Logo size="md" linkTo="/" />
+        </div>
         <h2>Create Account</h2>
         <p className="gf-auth-subtitle">Start managing your finances today</p>
 
@@ -93,12 +97,24 @@ const SignUp = () => {
           <div className="gf-form-grid">
             <div className="form-group">
               <label>Password</label>
-              <input type="password" value={form.password} onChange={update('password')} placeholder="Min. 8 characters" required />
+              <PasswordInput
+                value={form.password}
+                onChange={update('password')}
+                placeholder="Min. 8 characters"
+                required
+                autoComplete="new-password"
+              />
               {errors.password && <span className="gf-field-error">{errors.password}</span>}
             </div>
             <div className="form-group">
               <label>Confirm Password</label>
-              <input type="password" value={form.confirmPassword} onChange={update('confirmPassword')} placeholder="Confirm password" required />
+              <PasswordInput
+                value={form.confirmPassword}
+                onChange={update('confirmPassword')}
+                placeholder="Confirm password"
+                required
+                autoComplete="new-password"
+              />
               {errors.confirmPassword && <span className="gf-field-error">{errors.confirmPassword}</span>}
             </div>
           </div>

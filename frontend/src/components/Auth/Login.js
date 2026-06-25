@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useToast } from '../Common/Toast';
+import Logo from '../Common/Logo';
+import PasswordInput from '../Common/PasswordInput';
 
 const Login = ({ onLogin }) => {
   const navigate = useNavigate();
@@ -41,14 +43,17 @@ const Login = ({ onLogin }) => {
     <div className="gf-auth-page">
       <div className="gf-auth-bg" />
       <div className="gf-auth-card">
-        <Link to="/" className="gf-auth-brand">GROW FINANCE</Link>
+        <div className="gf-auth-brand-wrap">
+          <Logo size="md" linkTo="/" />
+        </div>
         <h2>Welcome Back</h2>
         <p className="gf-auth-subtitle">Sign in to your account to continue</p>
 
         <form onSubmit={handleSubmit} className="gf-auth-form">
           <div className="form-group">
-            <label>Email</label>
+            <label htmlFor="login-email">Email</label>
             <input
+              id="login-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -58,9 +63,9 @@ const Login = ({ onLogin }) => {
             />
           </div>
           <div className="form-group">
-            <label>Password</label>
-            <input
-              type="password"
+            <label htmlFor="login-password">Password</label>
+            <PasswordInput
+              id="login-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"

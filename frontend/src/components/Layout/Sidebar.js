@@ -4,6 +4,7 @@ import {
   FiHome, FiBox, FiUsers, FiFileText, FiShoppingCart, FiTruck,
   FiChevronDown, FiChevronRight, FiRepeat
 } from 'react-icons/fi';
+import Logo from '../Common/Logo';
 
 const Sidebar = () => {
   const menuSections = [
@@ -66,13 +67,7 @@ const Sidebar = () => {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <div className="sidebar-brand">
-          <div className="sidebar-brand-icon">GF</div>
-          <div className="sidebar-brand-text">
-            <div className="sidebar-logo">GROW FINANCE</div>
-            <div className="sidebar-subtitle">Financial Platform</div>
-          </div>
-        </div>
+        <Logo size="sidebar" variant="sidebar" linkTo={null} className="sidebar-logo-component" />
       </div>
 
       <nav className="sidebar-nav">

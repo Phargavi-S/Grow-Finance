@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useToast } from '../Common/Toast';
+import Logo from '../Common/Logo';
 
 const ForgotPassword = () => {
   const { showToast } = useToast();
@@ -32,7 +33,9 @@ const ForgotPassword = () => {
     <div className="gf-auth-page">
       <div className="gf-auth-bg" />
       <div className="gf-auth-card">
-        <Link to="/" className="gf-auth-brand">GROW FINANCE</Link>
+        <div className="gf-auth-brand-wrap">
+          <Logo size="md" linkTo="/" />
+        </div>
         <h2>Forgot Password</h2>
         <p className="gf-auth-subtitle">
           Enter your email and we&apos;ll send you a link to reset your password.
@@ -47,8 +50,9 @@ const ForgotPassword = () => {
         ) : (
           <form onSubmit={handleSubmit} className="gf-auth-form">
             <div className="form-group">
-              <label>Email</label>
+              <label htmlFor="forgot-email">Email</label>
               <input
+                id="forgot-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

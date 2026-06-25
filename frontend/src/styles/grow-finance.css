@@ -12,8 +12,159 @@
 *,
 *::before,
 *::after {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
+
+/* Logo Component */
+.gf-logo-link {
+  text-decoration: none;
+  display: inline-flex;
+}
+
+.gf-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gf-logo-img {
+  object-fit: contain;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.gf-logo--sm .gf-logo-img { width: 38px; height: 38px; }
+.gf-logo--sm .gf-logo-grow { font-size: 13px; }
+.gf-logo--sm .gf-logo-finance { font-size: 17px; }
+.gf-logo--md .gf-logo-img { width: 40px; height: 40px; }
+.gf-logo--lg .gf-logo-img { width: 52px; height: 52px; }
+.gf-logo--xl .gf-logo-img { width: 72px; height: 72px; }
+.gf-logo--sidebar .gf-logo-img { width: 44px; height: 44px; }
+
+.gf-logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  min-width: 0;
+}
+
+.gf-logo-grow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.gf-logo-finance {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.gf-logo--light .gf-logo-grow,
+.gf-logo--light .gf-logo-finance {
+  color: var(--gf-text-on-dark);
+}
+
+.gf-logo--light .gf-logo-grow {
+  color: var(--gf-accent-solid);
+}
+
+.gf-logo--default .gf-logo-grow {
+  color: var(--gf-accent-solid);
+  font-size: 10px;
+}
+
+.gf-logo--default .gf-logo-finance {
+  color: var(--gf-primary);
+}
+
+.gf-logo--sidebar .gf-logo-grow {
+  color: var(--gf-accent-solid);
+  font-size: 10px;
+}
+
+.gf-logo--sidebar .gf-logo-finance {
+  color: var(--gf-text-on-dark);
+  font-size: 14px;
+}
+
+.gf-logo--xl {
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gf-logo--xl .gf-logo-text {
+  align-items: center;
+}
+
+.gf-logo--xl .gf-logo-grow {
+  font-size: 13px;
+}
+
+.gf-logo--xl .gf-logo-finance {
+  font-size: 22px;
+}
+
+.gf-footer-logo {
+  margin-bottom: 16px;
+}
+
+.gf-auth-brand-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+/* Password Field */
+.gf-password-field {
+  position: relative;
+}
+
+.gf-password-field input[type="password"],
+.gf-password-field input[type="text"] {
+  padding: 12px 44px 12px 14px;
+  border: 1px solid #dde3ed;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+  width: 100%;
+  font-family: inherit;
+}
+
+.gf-password-field input:focus {
+  outline: none;
+  border-color: var(--gf-accent-solid);
+  box-shadow: 0 0 0 3px rgba(178, 255, 89, 0.25);
+}
+
+.gf-password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--gf-text-muted);
+  font-size: 18px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.gf-password-toggle:hover {
+  color: var(--gf-primary);
+}
+
+.gf-password-toggle:focus {
+  outline: none;
+  color: var(--gf-primary);
+}
+
 
 /* Loading */
 .loading-container {

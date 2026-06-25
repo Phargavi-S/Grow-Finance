@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useToast } from '../Common/Toast';
+import Logo from '../Common/Logo';
+import PasswordInput from '../Common/PasswordInput';
 
 const ResetPassword = () => {
   const { token } = useParams();
@@ -48,30 +50,32 @@ const ResetPassword = () => {
     <div className="gf-auth-page">
       <div className="gf-auth-bg" />
       <div className="gf-auth-card">
-        <Link to="/" className="gf-auth-brand">GROW FINANCE</Link>
+        <div className="gf-auth-brand-wrap">
+          <Logo size="md" linkTo="/" />
+        </div>
         <h2>Reset Password</h2>
         <p className="gf-auth-subtitle">Enter your new password below.</p>
 
         <form onSubmit={handleSubmit} className="gf-auth-form">
           <div className="form-group">
             <label>New Password</label>
-            <input
-              type="password"
+            <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Min. 8 characters"
               required
+              autoComplete="new-password"
             />
             {errors.password && <span className="gf-field-error">{errors.password}</span>}
           </div>
           <div className="form-group">
             <label>Confirm Password</label>
-            <input
-              type="password"
+            <PasswordInput
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm new password"
               required
+              autoComplete="new-password"
             />
             {errors.confirmPassword && <span className="gf-field-error">{errors.confirmPassword}</span>}
           </div>
