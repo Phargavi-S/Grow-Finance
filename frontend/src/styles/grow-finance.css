@@ -22,21 +22,27 @@
 }
 
 .gf-logo {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
 }
 
 .gf-logo-img {
   object-fit: contain;
-  border-radius: 6px;
+  width: 100%;
+  height: auto;
   flex-shrink: 0;
+  background: transparent;
 }
 
-.gf-logo--sm .gf-logo-img { width: 38px; height: 38px; }
+.gf-logo--sm {
+  min-width: 60px;
+}
+
+.gf-logo--sm .gf-logo-img { width: 60px; height: 60px; }
 .gf-logo--sm .gf-logo-grow { font-size: 13px; }
 .gf-logo--sm .gf-logo-finance { font-size: 17px; }
-.gf-logo--md .gf-logo-img { width: 40px; height: 40px; }
+.gf-logo--md .gf-logo-img { width: 48px; height: 48px; }
 .gf-logo--lg .gf-logo-img { width: 52px; height: 52px; }
 .gf-logo--xl .gf-logo-img { width: 72px; height: 72px; }
 .gf-logo--sidebar .gf-logo-img { width: 44px; height: 44px; }
@@ -114,6 +120,22 @@
   display: flex;
   justify-content: center;
   margin-bottom: 24px;
+}
+
+.gf-auth-logo {
+  justify-content: center;
+}
+
+.gf-auth-logo .gf-logo-text {
+  align-items: center;
+}
+
+.gf-auth-logo .gf-logo-grow {
+  font-size: 12px;
+}
+
+.gf-auth-logo .gf-logo-finance {
+  font-size: 18px;
 }
 
 /* Password Field */
@@ -271,7 +293,8 @@
 .gf-navbar-inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 16px 24px;
+  padding: 12px 24px;
+  min-height: 72px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -641,7 +664,7 @@
 
 .gf-footer-grid {
   display: grid;
-  grid-template-columns: 2fr repeat(4, 1fr);
+  grid-template-columns: 2fr 1fr 1fr;
   gap: 32px;
   margin-bottom: 40px;
 }
@@ -896,6 +919,13 @@
 }
 
 @media (max-width: 768px) {
+  .gf-navbar-inner {
+    padding: 12px 16px;
+    min-height: 64px;
+  }
+
+  .gf-logo--sm .gf-logo-img { width: 44px; height: 44px; }
+
   .gf-navbar-toggle {
     display: flex;
   }

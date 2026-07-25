@@ -15,12 +15,13 @@ import PurchaseOrdersDashboard from './components/PurchaseOrders/PurchaseOrdersD
 import PurchaseOrderForm from './components/PurchaseOrders/PurchaseOrderForm';
 import ProtectedRoute from './components/Common/ProtectedRoute';
 import RecurringPage from './components/Recurring/RecurringPage';
+import ProfileSettings from './components/Settings/ProfileSettings';
 import { ToastProvider } from './components/Common/Toast';
 import './App.css';
 import './styles/grow-finance.css';
 
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+axios.defaults.baseURL = process.env.REACT_APP_API_URL || '/api';
 
 axios.interceptors.response.use(
   (response) => response,
@@ -182,6 +183,11 @@ function App() {
           <Route path="/purchase-orders/new" element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <PurchaseOrderForm onLogout={handleLogout} user={user} />
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ProfileSettings onLogout={handleLogout} user={user} />
             </ProtectedRoute>
           } />
         </Routes>

@@ -1,5 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
+
+const SHIPPING_TO_BILLING = {
+  shippingAddress: 'billingAddress',
+  shippingCountry: 'billingCountry',
+  shippingState: 'billingState',
+  shippingCity: 'billingCity',
+  shippingPin: 'billingPin',
+  shippingPhone: 'billingPhone',
+  shippingFax: 'billingFax'
+};
+
+const ADDRESS_SYNC_FIELDS = Object.keys(SHIPPING_TO_BILLING);
+
+const copyShippingToBilling = (data) => {
+  const updated = { ...data };
+  ADDRESS_SYNC_FIELDS.forEach((shippingField) => {
+    updated[SHIPPING_TO_BILLING[shippingField]] = data[shippingField] || '';
+  });
+  return updated;
+};
+
+const addressesMatch = (data) =>
+  ADDRESS_SYNC_FIELDS.every(
+    (shippingField) =>
+      (data[shippingField] || '') === (data[SHIPPING_TO_BILLING[shippingField]] || '')
+  );
+
+const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((email || '').trim());
+
+const getDerivedName = (data) => {
+  if (data.name?.trim()) return data.name.trim();
+  if (data.firstName?.trim() || data.lastName?.trim()) {
+    return `${data.firstName || ''} ${data.lastName || ''}`.trim();
+  }
+  if (data.companyName?.trim()) return data.companyName.trim();
+  if (data.email?.trim()) return data.email.split('@')[0];
+  return '';
+};
 
 const CustomerForm = ({ customer, onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -24,6 +62,14 @@ const CustomerForm = ({ customer, onSuccess, onCancel }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [activeTab, setActiveTab] = useState('basic');
+  const [billingSameAsShipping, setBillingSameAsShipping] = useState(false);
+
+  const isFormValid = useMemo(() => {
+    if (!isValidEmail(formData.email)) return false;
+    if (!getDerivedName(formData)) return false;
+    if (formData.contactEmail?.trim() && !isValidEmail(formData.contactEmail)) return false;
+    return true;
+  }, [formData]);
 
   useEffect(() => {
     if (customer) {
@@ -63,12 +109,46 @@ const CustomerForm = ({ customer, onSuccess, onCancel }) => {
         contactEmail: customer.contactEmail || '',
         remarks: customer.remarks || ''
       });
+      setBillingSameAsShipping(addressesMatch({
+        shippingAddress: customer.shippingAddress || '',
+        shippingCountry: customer.shippingCountry || 'Germany',
+        shippingState: customer.shippingState || '',
+        shippingCity: customer.shippingCity || '',
+        shippingPin: customer.shippingPin || '',
+        shippingPhone: customer.shippingPhone || '',
+        shippingFax: customer.shippingFax || '',
+        billingAddress: customer.billingAddress || '',
+        billingCountry: customer.billingCountry || 'Germany',
+        billingState: customer.billingState || '',
+        billingCity: customer.billingCity || '',
+        billingPin: customer.billingPin || '',
+        billingPhone: customer.billingPhone || '',
+        billingFax: customer.billingFax || ''
+      }));
+    } else {
+      setBillingSameAsShipping(false);
     }
   }, [customer]);
 
+  const handleBillingSameAsShippingChange = (e) => {
+    const checked = e.target.checked;
+    setBillingSameAsShipping(checked);
+    if (checked) {
+      setFormData((prev) => copyShippingToBilling(prev));
+    }
+  };
+
   const handleChange = (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-    setFormData({ ...formData, [e.target.name]: value });
+    const { name, type } = e.target;
+    const value = type === 'checkbox' ? e.target.checked : e.target.value;
+
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value };
+      if (billingSameAsShipping && SHIPPING_TO_BILLING[name]) {
+        updated[SHIPPING_TO_BILLING[name]] = value;
+      }
+      return updated;
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -510,8 +590,8 @@ const CustomerForm = ({ customer, onSuccess, onCancel }) => {
         
         {/* Additional Details Tab */}
         {activeTab === 'tax' && (
-          <>
-            <div className="form-group">
+          <div className="customer-additional-details">
+            <div className="form-group customer-payment-terms-group">
               <label>Payment Terms</label>
               <select name="paymentTerms" value={formData.paymentTerms} onChange={handleChange}>
                 <option value="Due on Receipt">Due on Receipt</option>
@@ -521,36 +601,52 @@ const CustomerForm = ({ customer, onSuccess, onCancel }) => {
                 <option value="Net 60">Net 60</option>
               </select>
             </div>
-            
-            <div className="form-group">
-              <label>
+
+            <div className="form-group customer-portal-access-group">
+              <label className="customer-portal-access-label">Enable Portal Access</label>
+              <label className="customer-portal-access-control">
                 <input type="checkbox" name="portalAccess" checked={formData.portalAccess} onChange={handleChange} />
-                Enable portal access for this customer
+                <span>Allow this customer to access the portal</span>
               </label>
-              <small style={{ color: '#666', fontSize: '11px', display: 'block', marginTop: '4px' }}>Customer can view invoices online</small>
+              <small className="customer-portal-access-help">Customer can view invoices online</small>
             </div>
-          </>
+          </div>
         )}
         
         {/* Billing Address Tab */}
         {activeTab === 'billing' && (
           <>
+            <div className="form-group customer-address-sync-group">
+              <label className="customer-address-sync-control">
+                <input
+                  type="checkbox"
+                  checked={billingSameAsShipping}
+                  onChange={handleBillingSameAsShippingChange}
+                />
+                <span>Billing address is same as shipping address</span>
+              </label>
+              {billingSameAsShipping && (
+                <small className="customer-address-sync-help">
+                  Billing fields are synced from the shipping address.
+                </small>
+              )}
+            </div>
             <div className="form-group">
               <label>Billing Address</label>
-              <textarea name="billingAddress" value={formData.billingAddress} onChange={handleChange} rows="2" placeholder="Street address, building, apartment" />
+              <textarea name="billingAddress" value={formData.billingAddress} onChange={handleChange} rows="2" placeholder="Street address, building, apartment" disabled={billingSameAsShipping} />
               <small style={{ color: '#666', fontSize: '11px', marginTop: '4px', display: 'block' }}>Use German address order: street name and house number, postal code, city.</small>
             </div>
             <div className="form-row">
-              <div className="form-group"><label>City</label><input name="billingCity" value={formData.billingCity} onChange={handleChange} placeholder="City" /></div>
-              <div className="form-group"><label>State</label><input name="billingState" value={formData.billingState} onChange={handleChange} placeholder="State/Province" /></div>
+              <div className="form-group"><label>City</label><input name="billingCity" value={formData.billingCity} onChange={handleChange} placeholder="City" disabled={billingSameAsShipping} /></div>
+              <div className="form-group"><label>State</label><input name="billingState" value={formData.billingState} onChange={handleChange} placeholder="State/Province" disabled={billingSameAsShipping} /></div>
             </div>
             <div className="form-row">
-              <div className="form-group"><label>Postal Code</label><input name="billingPin" value={formData.billingPin} onChange={handleChange} placeholder="Postal code" /></div>
-              <div className="form-group"><label>Country</label><input name="billingCountry" value={formData.billingCountry} onChange={handleChange} placeholder="Country" /></div>
+              <div className="form-group"><label>Postal Code</label><input name="billingPin" value={formData.billingPin} onChange={handleChange} placeholder="Postal code" disabled={billingSameAsShipping} /></div>
+              <div className="form-group"><label>Country</label><input name="billingCountry" value={formData.billingCountry} onChange={handleChange} placeholder="Country" disabled={billingSameAsShipping} /></div>
             </div>
             <div className="form-row">
-              <div className="form-group"><label>Phone</label><input name="billingPhone" value={formData.billingPhone} onChange={handleChange} placeholder="Billing contact phone" /></div>
-              <div className="form-group"><label>Fax</label><input name="billingFax" value={formData.billingFax} onChange={handleChange} placeholder="Fax number" /></div>
+              <div className="form-group"><label>Phone</label><input name="billingPhone" value={formData.billingPhone} onChange={handleChange} placeholder="Billing contact phone" disabled={billingSameAsShipping} /></div>
+              <div className="form-group"><label>Fax</label><input name="billingFax" value={formData.billingFax} onChange={handleChange} placeholder="Fax number" disabled={billingSameAsShipping} /></div>
             </div>
           </>
         )}
@@ -558,6 +654,21 @@ const CustomerForm = ({ customer, onSuccess, onCancel }) => {
         {/* Shipping Address Tab */}
         {activeTab === 'shipping' && (
           <>
+            <div className="form-group customer-address-sync-group">
+              <label className="customer-address-sync-control">
+                <input
+                  type="checkbox"
+                  checked={billingSameAsShipping}
+                  onChange={handleBillingSameAsShippingChange}
+                />
+                <span>Billing address is same as shipping address</span>
+              </label>
+              {billingSameAsShipping && (
+                <small className="customer-address-sync-help">
+                  Changes to shipping address will automatically update billing address.
+                </small>
+              )}
+            </div>
             <div className="form-group">
               <label>Shipping Address</label>
               <textarea name="shippingAddress" value={formData.shippingAddress} onChange={handleChange} rows="2" placeholder="Street address, building, apartment" />
@@ -585,7 +696,7 @@ const CustomerForm = ({ customer, onSuccess, onCancel }) => {
         
         <div className="form-actions">
           <button type="button" className="btn-secondary" onClick={onCancel}>Cancel</button>
-          <button type="submit" className="btn-primary" disabled={loading}>
+          <button type="submit" className="btn-primary" disabled={loading || !isFormValid}>
             {loading ? 'Saving...' : (customer ? 'Update Customer' : 'Create Customer')}
           </button>
         </div>

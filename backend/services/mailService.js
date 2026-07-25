@@ -1,39 +1,33 @@
-const nodemailer = require('nodemailer');
+const fs = require('fs');
+const { Resend } = require('resend');
 
-// Create transporter with better configuration
-const createTransporter = () => {
-  // Check credentials
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.error('❌ EMAIL ERROR: Missing EMAIL_USER or EMAIL_PASS in .env');
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+const getEmailFrom = (label) => {
+  const companyName = process.env.COMPANY_NAME || 'Billing System';
+  const fromEmail = process.env.EMAIL_FROM;
+
+  if (!fromEmail) {
     return null;
   }
 
-  console.log(`📧 Configuring email with: ${process.env.EMAIL_USER}`);
-
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    },
-    // These options help with deliverability
-    tls: {
-      rejectUnauthorized: false
-    },
-    // Connection timeout
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000
-  });
+  return `"${label || companyName}" <${fromEmail}>`;
 };
 
 // Test email configuration
 const testEmailConfig = async () => {
   try {
-    const transporter = createTransporter();
-    if (!transporter) return false;
-    
-    await transporter.verify();
+    if (!process.env.RESEND_API_KEY) {
+      console.error('❌ EMAIL ERROR: Missing RESEND_API_KEY in .env');
+      return false;
+    }
+
+    if (!process.env.EMAIL_FROM) {
+      console.error('❌ EMAIL ERROR: Missing EMAIL_FROM in .env');
+      return false;
+    }
+
+    console.log(`📧 Configuring email with Resend from: ${process.env.EMAIL_FROM}`);
     console.log('✅ Email configuration is VALID');
     return true;
   } catch (error) {
@@ -45,23 +39,33 @@ const testEmailConfig = async () => {
 // Send test email
 const sendTestEmail = async () => {
   try {
-    const transporter = createTransporter();
-    if (!transporter) {
-      console.log('❌ Cannot send test email: Transporter not available');
+    const from = getEmailFrom(process.env.COMPANY_NAME || 'Billing System');
+    if (!from) {
+      console.log('❌ Cannot send test email: EMAIL_FROM not configured');
       return false;
     }
-    
-    const info = await transporter.sendMail({
-      from: `"${process.env.COMPANY_NAME || 'Billing System'}" <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_USER,
+
+    if (!process.env.RESEND_API_KEY) {
+      console.log('❌ Cannot send test email: RESEND_API_KEY not configured');
+      return false;
+    }
+
+    const to = process.env.EMAIL_FROM;
+    const { data, error } = await resend.emails.send({
+      from,
+      to,
       subject: 'Test Email from Billing System',
       text: 'If you receive this, your email configuration is working correctly!',
       html: '<h1>✅ Test Successful!</h1><p>Your billing system email is configured correctly.</p>'
     });
-    
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
     console.log('✅ Test email sent successfully!');
-    console.log(`📧 Message ID: ${info.messageId}`);
-    console.log(`📧 Check inbox/spam folder of: ${process.env.EMAIL_USER}`);
+    console.log(`📧 Message ID: ${data.id}`);
+    console.log(`📧 Check inbox/spam folder of: ${to}`);
     return true;
   } catch (error) {
     console.error('❌ Test email failed:', error.message);
@@ -95,9 +99,13 @@ const sendInvoiceEmail = async (invoice, customer, pdfPath) => {
       throw new Error('PDF path not available');
     }
 
-    const transporter = createTransporter();
-    if (!transporter) {
-      throw new Error('Failed to create email transporter. Check EMAIL_USER and EMAIL_PASS in .env');
+    const from = getEmailFrom(`${companyName} - Billing`);
+    if (!from) {
+      throw new Error('Failed to create email sender. Check EMAIL_FROM in .env');
+    }
+
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error('Failed to send email. Check RESEND_API_KEY in .env');
     }
 
     const invoiceNumber = invoice.invoiceNumber || invoice._id || 'Unknown';
@@ -186,42 +194,35 @@ const sendInvoiceEmail = async (invoice, customer, pdfPath) => {
       </html>
     `;
 
-    const mailOptions = {
-      from: `"${companyName} - Billing" <${process.env.EMAIL_USER}>`,
+    const pdfFilename = `Invoice_${invoiceNumber}.pdf`;
+    const pdfContent = fs.readFileSync(pdfPath);
+
+    console.log('📧 Attempting to send email...');
+    const { data, error } = await resend.emails.send({
+      from,
       to: customer.email,
       subject: `Your Invoice from ${companyName} - ${invoiceNumber}`,
       html: htmlContent,
       attachments: [
         {
-          filename: `Invoice_${invoiceNumber}.pdf`,
-          path: pdfPath,
-          contentType: 'application/pdf'
+          filename: pdfFilename,
+          content: pdfContent
         }
       ]
-    };
+    });
 
-    console.log('📧 Attempting to send email...');
-    const info = await transporter.sendMail(mailOptions);
+    if (error) {
+      throw new Error(error.message);
+    }
+
     console.log(`✅ Email sent successfully!`);
-    console.log(`📧 Message ID: ${info.messageId}`);
+    console.log(`📧 Message ID: ${data.id}`);
     console.log(`📧 To: ${customer.email}`);
-    
-    return info;
-    
+
+    return data;
+
   } catch (error) {
     console.error('❌ Email sending failed:', error.message);
-    
-    // Provide helpful error messages
-    if (error.message.includes('Invalid login')) {
-      console.error('🔧 Fix: Your App Password is incorrect. Generate a new one at:');
-      console.error('   https://myaccount.google.com/apppasswords');
-    } else if (error.message.includes('Username and Password not accepted')) {
-      console.error('🔧 Fix: Enable 2-Step Verification on your Google Account');
-      console.error('   Then generate a new App Password');
-    } else if (error.message.includes('connect ETIMEDOUT')) {
-      console.error('🔧 Fix: Check your internet connection');
-    }
-    
     throw error;
   }
 };
@@ -247,9 +248,13 @@ const sendPurchaseOrderEmail = async (purchaseOrder, vendor, pdfPath) => {
       throw new Error('PDF path not available');
     }
 
-    const transporter = createTransporter();
-    if (!transporter) {
-      throw new Error('Failed to create email transporter. Check EMAIL_USER and EMAIL_PASS in .env');
+    const from = getEmailFrom(`${companyName} - Purchasing`);
+    if (!from) {
+      throw new Error('Failed to create email sender. Check EMAIL_FROM in .env');
+    }
+
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error('Failed to send email. Check RESEND_API_KEY in .env');
     }
 
     const poNumber = purchaseOrder.poNumber || purchaseOrder._id || 'Unknown';
@@ -300,24 +305,29 @@ const sendPurchaseOrderEmail = async (purchaseOrder, vendor, pdfPath) => {
       </html>
     `;
 
-    const mailOptions = {
-      from: `"${companyName} - Purchasing" <${process.env.EMAIL_USER}>`,
+    const pdfFilename = `PO_${poNumber}.pdf`;
+    const pdfContent = fs.readFileSync(pdfPath);
+
+    console.log(`📧 Sending purchase order email to: ${vendor.email}`);
+    const { data, error } = await resend.emails.send({
+      from,
       to: vendor.email,
       subject: `Purchase Order ${poNumber} from ${companyName}`,
       html: htmlContent,
       attachments: [
         {
-          filename: `PO_${poNumber}.pdf`,
-          path: pdfPath,
-          contentType: 'application/pdf'
+          filename: pdfFilename,
+          content: pdfContent
         }
       ]
-    };
+    });
 
-    console.log(`📧 Sending purchase order email to: ${vendor.email}`);
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Purchase order email sent successfully! Message ID: ${info.messageId}`);
-    return info;
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    console.log(`✅ Purchase order email sent successfully! Message ID: ${data.id}`);
+    return data;
   } catch (error) {
     console.error('❌ Purchase order email failed:', error.message);
     throw error;
@@ -340,9 +350,13 @@ const sendReminderEmail = async (invoice, customer) => {
       throw new Error('Customer email not available');
     }
 
-    const transporter = createTransporter();
-    if (!transporter) {
-      throw new Error('Failed to create email transporter. Check EMAIL_USER and EMAIL_PASS in .env');
+    const from = getEmailFrom(`${companyName} - Billing`);
+    if (!from) {
+      throw new Error('Failed to create email sender. Check EMAIL_FROM in .env');
+    }
+
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error('Failed to send email. Check RESEND_API_KEY in .env');
     }
 
     const invoiceNumber = invoice.invoiceNumber || invoice._id || 'Unknown';
@@ -429,17 +443,20 @@ const sendReminderEmail = async (invoice, customer) => {
       </html>
     `;
 
-    const mailOptions = {
-      from: `"${companyName} - Billing" <${process.env.EMAIL_USER}>`,
+    console.log(`📧 Sending payment reminder to: ${customer.email}`);
+    const { data, error } = await resend.emails.send({
+      from,
       to: customer.email,
       subject: `Reminder: Invoice ${invoiceNumber} Payment Due - ${companyName}`,
       html: htmlContent
-    };
+    });
 
-    console.log(`📧 Sending payment reminder to: ${customer.email}`);
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Reminder email sent successfully! Message ID: ${info.messageId}`);
-    return info;
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    console.log(`✅ Reminder email sent successfully! Message ID: ${data.id}`);
+    return data;
 
   } catch (error) {
     console.error('❌ Reminder email failed:', error.message);
@@ -447,9 +464,9 @@ const sendReminderEmail = async (invoice, customer) => {
   }
 };
 
-module.exports = { 
-  sendInvoiceEmail, 
-  testEmailConfig, 
+module.exports = {
+  sendInvoiceEmail,
+  testEmailConfig,
   sendTestEmail,
   sendPurchaseOrderEmail,
   sendReminderEmail

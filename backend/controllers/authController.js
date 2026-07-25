@@ -1,20 +1,11 @@
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const User = require('../models/User');
 
 const SESSION_SHORT = 24 * 60 * 60 * 1000;
 const SESSION_LONG = 30 * 24 * 60 * 60 * 1000;
 
-const getEmailTransporter = () => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return null;
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
-  });
-};
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const setSessionUser = (req, user) => {
   req.session.userId = user._id;
@@ -188,36 +179,47 @@ const forgotPassword = async (req, res) => {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const resetLink = `${frontendUrl}/reset-password/${resetToken}`;
 
-    const transporter = getEmailTransporter();
+  try {
+  await resend.emails.send({
+    from: process.env.EMAIL_FROM,
+    to: user.email,
+    subject: 'Reset Your GROW FINANCE Password',
+    html: `
+      <div style="font-family: Inter, sans-serif; max-width:560px;margin:auto;">
+        <h2 style="color:#0a1324;">GROW FINANCE</h2>
 
-    if (transporter) {
-      try {
-        await transporter.sendMail({
-          from: `"GROW FINANCE" <${process.env.EMAIL_USER}>`,
-          to: user.email,
-          subject: 'Reset Your GROW FINANCE Password',
-          html: `
-            <div style="font-family: Inter, sans-serif; max-width: 560px; margin: 0 auto;">
-              <h2 style="color: #0a1324;">GROW FINANCE</h2>
-              <p>Hello ${user.fullName},</p>
-              <p>You requested a password reset. Click the link below to set a new password:</p>
-              <a href="${resetLink}" style="display: inline-block; background: #0a1324; color: #b2ff59; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 16px 0;">Reset Password</a>
-              <p style="color: #666; font-size: 13px;">This link expires in 1 hour. If you did not request this, ignore this email.</p>
-            </div>
-          `
-        });
-      } catch (mailErr) {
-        console.error('Email send error:', mailErr.message);
-        console.log('Reset link (dev fallback):', resetLink);
-      }
-    } else {
-      console.log('Email not configured. Reset link:', resetLink);
-    }
+        <p>Hello ${user.fullName},</p>
+
+        <p>You requested a password reset. Click the button below to set a new password.</p>
+
+        <a href="${resetLink}"
+           style="
+             display:inline-block;
+             background:#0a1324;
+             color:#b2ff59;
+             padding:12px 24px;
+             text-decoration:none;
+             border-radius:8px;
+             margin:16px 0;">
+          Reset Password
+        </a>
+
+        <p style="color:#666;font-size:13px;">
+          This link expires in 1 hour.
+          If you didn't request this, you can safely ignore this email.
+        </p>
+      </div>
+    `
+  });
+} catch (mailErr) {
+  console.error('Resend Email Error:', mailErr);
+  console.log('Reset link:', resetLink);
+}
 
     res.json({
       success: true,
       message: 'If an account exists with this email, a reset link has been sent.',
-      ...(process.env.NODE_ENV !== 'production' && !transporter ? { resetLink } : {})
+      ...(process.env.NODE_ENV !== 'production' ? { resetLink } : {})
     });
   } catch (error) {
     console.error('Forgot password error:', error);

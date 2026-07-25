@@ -44,7 +44,7 @@ const Login = ({ onLogin }) => {
       <div className="gf-auth-bg" />
       <div className="gf-auth-card">
         <div className="gf-auth-brand-wrap">
-          <Logo size="md" linkTo="/" />
+          <Logo size="md" showImage={false} className="gf-auth-logo" linkTo="/" />
         </div>
         <h2>Welcome Back</h2>
         <p className="gf-auth-subtitle">Sign in to your account to continue</p>

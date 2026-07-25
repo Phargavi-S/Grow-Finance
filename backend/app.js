@@ -21,6 +21,7 @@ const invoiceRoutes = require('./routes/invoiceRoutes');
 const vendorRoutes = require('./routes/vendorRoutes');
 const purchaseOrderRoutes = require('./routes/purchaseOrderRoutes');
 const recurringRoutes = require('./routes/recurringRoutes');
+const profileRoutes = require('./routes/profileRoutes');
 
 const app = express();
 
@@ -68,6 +69,7 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/vendors', vendorRoutes);
 app.use('/api/purchase-orders', purchaseOrderRoutes);
 app.use('/api/recurring', recurringRoutes);
+app.use('/api/profile', profileRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

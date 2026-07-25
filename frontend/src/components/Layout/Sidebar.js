@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   FiHome, FiBox, FiUsers, FiFileText, FiShoppingCart, FiTruck,
-  FiChevronDown, FiChevronRight, FiRepeat
+  FiChevronDown, FiChevronRight, FiRepeat, FiSettings
 } from 'react-icons/fi';
 import Logo from '../Common/Logo';
 
@@ -29,7 +29,8 @@ const Sidebar = () => {
             { path: '/purchase-orders', name: 'Purchase Orders', icon: <FiShoppingCart /> },
             { path: '/vendors', name: 'Vendors', icon: <FiTruck /> }
           ]
-        }
+        },
+        { path: '/settings', name: 'Settings', icon: <FiSettings /> }
       ]
     }
   ];

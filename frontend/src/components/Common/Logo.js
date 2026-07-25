@@ -1,10 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import logoImg from '../../assets/logo.jpeg';
+import logoImg from '../../assets/growvia-logo.png';
 
 const Logo = ({
   size = 'md',
   showText = true,
+  showImage = true,
   variant = 'default',
   linkTo = '/',
   className = ''
@@ -14,7 +15,7 @@ const Logo = ({
 
   const content = (
     <div className={`gf-logo ${sizeClass} ${variantClass} ${className}`.trim()}>
-      <img src={logoImg} alt="GROW FINANCE" className="gf-logo-img" />
+      {showImage && <img src={logoImg} alt="GROW FINANCE" className="gf-logo-img" />}
       {showText && (
         <div className="gf-logo-text">
           <span className="gf-logo-grow">GROW</span>

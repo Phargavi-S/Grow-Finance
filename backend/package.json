@@ -20,7 +20,8 @@
     "node-cron": "^3.0.3",
     "nodemailer": "^8.0.5",
     "pdfkit": "^0.14.0",
-    "puppeteer": "^24.42.0"
+    "puppeteer": "^24.42.0",
+    "resend": "^6.17.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

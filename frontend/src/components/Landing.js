@@ -101,32 +101,26 @@ const Landing = () => {
               <p>Smart financial management for modern businesses. Simplify billing, grow faster.</p>
             </div>
             <div>
-              <h4>About</h4>
-              <ul>
-                <li><a href="#features">Our Platform</a></li>
-                <li><a href="#benefits">Why Choose Us</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4>Features</h4>
-              <ul>
-                <li><a href="#features">Invoicing</a></li>
-                <li><a href="#features">Customers</a></li>
-                <li><a href="#features">Purchase Orders</a></li>
-              </ul>
-            </div>
-            <div>
               <h4>Contact</h4>
               <ul>
-                <li>support@growfinance.com</li>
-                <li>+1 (800) 555-0199</li>
+                <li>info@growfinance</li>
+                <li>
+                  <a
+                    href="https://de.linkedin.com/company/arshanconsulting"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    LinkedIn
+                  </a>
+                </li>
               </ul>
             </div>
             <div>
               <h4>Legal</h4>
               <ul>
                 <li><button type="button" className="gf-footer-link">Privacy Policy</button></li>
-                <li><button type="button" className="gf-footer-link">Terms of Service</button></li>
+                <li><button type="button" className="gf-footer-link">Terms &amp; Conditions</button></li>
+                <li><button type="button" className="gf-footer-link">Imprint</button></li>
               </ul>
             </div>
           </div>
