@@ -27,7 +27,19 @@ const COMPANY_OWNER = process.env.COMPANY_OWNER;
 const COMPANY_BANK = process.env.COMPANY_BANK;
 const COMPANY_IBAN = process.env.COMPANY_IBAN;
 const COMPANY_BIC = process.env.COMPANY_BIC;
-const LOGO_PATH = process.env.LOGO_PATH;
+
+// Deployment-safe logo path: bundled backend asset with env fallback
+const LOGO_PATH = (() => {
+  const bundledPath = path.join(__dirname, '../assets/ArshanUG.jpeg');
+  if (fs.existsSync(bundledPath)) {
+    return bundledPath;
+  }
+  if (process.env.LOGO_PATH && fs.existsSync(process.env.LOGO_PATH)) {
+    return process.env.LOGO_PATH;
+  }
+  console.warn('⚠️ Logo file not found at bundled path or LOGO_PATH env. Invoice PDF will be generated without logo.');
+  return null;
+})();
 
 // ===== HELPER =====
 const saveTempPDF = (buffer, invoiceNumber) => {

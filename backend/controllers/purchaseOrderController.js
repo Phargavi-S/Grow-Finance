@@ -16,7 +16,19 @@ const COMPANY_COUNTRY = process.env.COMPANY_COUNTRY;
 const COMPANY_PHONE = process.env.COMPANY_PHONE;
 const COMPANY_EMAIL = process.env.COMPANY_EMAIL;
 const COMPANY_WEBSITE = process.env.COMPANY_WEBSITE;
-const LOGO_PATH = process.env.LOGO_PATH;
+
+// Deployment-safe logo path: bundled backend asset with env fallback
+const LOGO_PATH = (() => {
+  const bundledPath = path.join(__dirname, '../assets/ArshanUG.jpeg');
+  if (fs.existsSync(bundledPath)) {
+    return bundledPath;
+  }
+  if (process.env.LOGO_PATH && fs.existsSync(process.env.LOGO_PATH)) {
+    return process.env.LOGO_PATH;
+  }
+  console.warn('⚠️ Logo file not found at bundled path or LOGO_PATH env. Purchase order PDF will be generated without logo.');
+  return null;
+})();
 
 const saveTempPDF = (buffer, poNumber) => {
   const filePath = path.join(os.tmpdir(), `po_${poNumber}.pdf`);

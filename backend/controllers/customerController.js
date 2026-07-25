@@ -5,7 +5,7 @@ const createCustomer = async (req, res) => {
   try {
     console.log('📝 Creating customer with data:', req.body);
     
-    const { name, email, phone, workPhone, mobile, billingAddress, billingCity, billingState, billingPin, billingCountry } = req.body;
+    const { name, email, phone, workPhone, mobile, billingAddress, billingCity, billingState, billingPin, billingCountry, shippingAddress, shippingCity, shippingState, shippingPin, shippingCountry, shippingPhone, shippingFax } = req.body;
     
     // Validate required fields
     if (!name || !email) {
@@ -26,6 +26,13 @@ const createCustomer = async (req, res) => {
       billingState: billingState || '',
       billingPin: billingPin || '',
       billingCountry: billingCountry || 'India',
+      shippingAddress: shippingAddress || '',
+      shippingCity: shippingCity || '',
+      shippingState: shippingState || '',
+      shippingPin: shippingPin || '',
+      shippingCountry: shippingCountry || 'India',
+      shippingPhone: shippingPhone || '',
+      shippingFax: shippingFax || '',
       createdAt: new Date()
     });
     
