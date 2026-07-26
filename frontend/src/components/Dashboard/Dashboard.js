@@ -58,7 +58,7 @@ const Dashboard = ({ onLogout, user }) => {
 
   const formatCurrency = (value) => {
     const num = value || 0;
-    return typeof num === 'number' ? `₹${num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '₹0.00';
+    return typeof num === 'number' ? `€${num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '€0.00';
   };
 
   const kpiCards = [
@@ -159,9 +159,9 @@ const Dashboard = ({ onLogout, user }) => {
                       <td>{inv.customerId?.name || 'N/A'}</td>
                       <td><span className={`status-badge status-${(inv.status || 'unpaid').toLowerCase()}`}>{inv.status?.replace('_', ' ') || 'UNPAID'}</span></td>
                       <td>{inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : '-'}</td>
-                      <td>₹{(inv.subtotal || 0).toFixed(2)}</td>
-                      <td>₹{(inv.tax || 0).toFixed(2)}</td>
-                      <td>₹{(inv.total || 0).toFixed(2)}</td>
+                      <td>€{(inv.subtotal || 0).toFixed(2)}</td>
+                      <td>€{(inv.tax || 0).toFixed(2)}</td>
+                      <td>€{(inv.total || 0).toFixed(2)}</td>
                     </tr>
                   )) : (
                     <tr>

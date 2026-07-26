@@ -57,7 +57,7 @@ const PurchaseOrderForm = ({ onLogout, user }) => {
   const removeItem = (idx) => setSelectedItems(prev => prev.filter((_, i) => i !== idx));
 
   const handleSave = async (status) => {
-    if (!form.vendorId && !form.vendorName) return alert('Select or enter vendor');
+    if (!form.vendorId) return alert('Please select a vendor');
     if (!selectedItems.length) return alert('Add at least one item');
     setLoading(true);
     try {
@@ -96,12 +96,10 @@ const PurchaseOrderForm = ({ onLogout, user }) => {
             <div className="form-row">
               <div className="form-group">
                 <label>Vendor Name *</label>
-                <select value={form.vendorId} onChange={(e)=> setForm({...form, vendorId: e.target.value})}>
+                <select value={form.vendorId} onChange={(e)=> setForm({...form, vendorId: e.target.value, vendorName: e.target.value ? vendors.find(v=>v._id===e.target.value)?.name || '' : ''})}>
                   <option value="">Select vendor</option>
                   {vendors.map(v => <option key={v._id} value={v._id}>{v.name}</option>)}
                 </select>
-                <small style={{display:'block', marginTop:6}}>Or type a vendor name below</small>
-                <input style={{marginTop:6}} placeholder="Vendor name" value={form.vendorName} onChange={(e)=> setForm({...form, vendorName: e.target.value})} />
               </div>
 
               <div className="form-group">
