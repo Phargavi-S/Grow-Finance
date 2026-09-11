@@ -336,7 +336,6 @@ const InvoiceForm = ({ invoice, onSuccess, onCancel }) => {
               <div className="form-group"><label>Shipping Charges</label><input type="number" min="0" step="0.01" value={invoiceData.shippingCharges} onChange={(e) => setInvoiceData({ ...invoiceData, shippingCharges: e.target.value })} /></div>
               <div className="form-group"><label>Adjustment</label><input type="number" min="0" step="0.01" value={invoiceData.adjustment} onChange={(e) => setInvoiceData({ ...invoiceData, adjustment: e.target.value })} /></div>
               <div className="form-group"><label>Closing Text</label><textarea rows="2" value={invoiceData.closingText} onChange={(e) => setInvoiceData({ ...invoiceData, closingText: e.target.value })} placeholder="Optional closing text for invoice" /></div>
-              <div className="summary-row"><span>Round Off</span><span>€{totals.roundOff.toFixed(2)}</span></div>
               <div className="summary-row total"><span>Total Amount</span><span>€{totals.totalAmount.toFixed(2)}</span></div>
               <div className="summary-row"><span>Total Quantity</span><span>{totals.totalQuantity}</span></div>
             </div>
