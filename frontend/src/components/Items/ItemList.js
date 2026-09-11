@@ -31,8 +31,8 @@ const ItemList = ({ items = [], loading, onEdit, onDelete }) => {
               <td>{item.taxRate || 0}%</td>
               <td>{item.unit || 'Nos'}</td>
               <td className="actions-cell">
-                <button className="action-btn edit-btn" onClick={() => onEdit(item)}>Edit</button>
-                <button className="action-btn delete-btn" onClick={() => onDelete(item._id)}>Delete</button>
+                <button className="btn-secondary" onClick={() => onEdit(item)}>Edit</button>
+                <button className="btn-secondary" onClick={() => onDelete(item._id)}>Delete</button>
               </td>
             </tr>
           ))}

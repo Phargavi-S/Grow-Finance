@@ -832,14 +832,21 @@ html {
   border-collapse: collapse;
 }
 
-.data-table th {
+.data-table th,
+table.data-table thead th {
   padding: 14px 16px;
   text-align: left;
   background: var(--primary-dark);
-  color: var(--text-on-dark);
-  font-weight: 600;
+  color: #ffffff;
+  font-weight: 700;
   font-size: 13px;
+  letter-spacing: 0.02em;
   border-bottom: 1px solid rgba(178, 255, 89, 0.15);
+  white-space: nowrap;
+  position: relative;
+  z-index: 1;
+  opacity: 1;
+  visibility: visible;
 }
 
 .data-table td {

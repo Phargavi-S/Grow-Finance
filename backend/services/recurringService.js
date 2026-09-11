@@ -81,8 +81,19 @@ const processPlan = async (planOrId) => {
   const count = await Invoice.countDocuments();
   const invoiceNumber = `RE-${String(count + 1).padStart(6, '0')}`;
 
+  const lastWithOrder = await Invoice.findOne({
+    orderNumber: { $exists: true, $nin: [null, ''] }
+  }).sort({ orderNumber: -1 });
+  let nextOrderNum = 1;
+  if (lastWithOrder && lastWithOrder.orderNumber) {
+    const parsed = parseInt(String(lastWithOrder.orderNumber).replace(/^ORD-/, ''), 10);
+    if (!Number.isNaN(parsed)) nextOrderNum = parsed + 1;
+  }
+  const orderNumber = `ORD-${String(nextOrderNum).padStart(6, '0')}`;
+
   const invoice = new Invoice({
     invoiceNumber,
+    orderNumber,
     customerId: plan.customerId,
     items: dbItems,
     date: new Date(),
@@ -134,7 +145,7 @@ const processPlan = async (planOrId) => {
       country: customer.billingCountry || ''
     },
 
-    items: (dbItems || []).map(it => ({ description: it.description, quantity: it.quantity, unitPrice: it.rate })),
+    items: (dbItems || []).map(it => ({ description: it.description, quantity: it.quantity, rate: it.rate })),
     vatRate,
     logoPath: LOGO_PATH,
     closingText: plan.closingText || ''

@@ -293,11 +293,20 @@
 .gf-navbar-inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 12px 24px;
-  min-height: 72px;
+  padding: 10px 24px;
+  min-height: 88px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.gf-navbar-logo .gf-logo-img,
+.gf-navbar .gf-logo-img {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  object-position: left center;
+  image-rendering: auto;
 }
 
 .gf-navbar-brand {

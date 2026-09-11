@@ -3,26 +3,23 @@ const { testEmailConfig, sendTestEmail } = require('./services/mailService');
 
 async function test() {
   console.log('========================================');
-  console.log('TESTING EMAIL CONFIGURATION');
+  console.log('TESTING EMAIL CONFIGURATION (Resend)');
   console.log('========================================');
-  console.log(`EMAIL_USER: ${process.env.EMAIL_USER}`);
-  console.log(`EMAIL_PASS: ${process.env.EMAIL_PASS ? '✓ Set (length: ' + process.env.EMAIL_PASS.length + ')' : '✗ Missing'}`);
-  console.log(`EMAIL_ENABLED: ${process.env.EMAIL_ENABLED}`);
+  console.log(`RESEND_API_KEY: ${process.env.RESEND_API_KEY ? '✓ Set' : '✗ Missing'}`);
+  console.log(`EMAIL_FROM: ${process.env.EMAIL_FROM ? '✓ Set' : '✗ Missing'}`);
+  console.log(`EMAIL_ENABLED: ${process.env.EMAIL_ENABLED || 'true'}`);
   console.log('========================================\n');
-  
-  // Test configuration
+
   const configValid = await testEmailConfig();
-  
+
   if (configValid) {
     console.log('\n Sending test email...');
     await sendTestEmail();
-    console.log('\n Check your inbox/spam folder at:', process.env.EMAIL_USER);
   } else {
     console.log('\n Email configuration is invalid. Please check:');
-    console.log('   1. EMAIL_USER is correct');
-    console.log('   2. EMAIL_PASS is the 16-character App Password (no spaces)');
-    console.log('   3. 2-Step Verification is enabled on your Google Account');
-    console.log('   4. Generate a new App Password at: https://myaccount.google.com/apppasswords');
+    console.log('   1. RESEND_API_KEY is set');
+    console.log('   2. EMAIL_FROM uses a verified Resend domain/sender');
+    console.log('   3. EMAIL_ENABLED is not set to false');
   }
 }
 

@@ -25,9 +25,16 @@ const profileRoutes = require('./routes/profileRoutes');
 
 const app = express();
 
-// Use frontend URL from env (Vercel) or default to localhost for dev
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://grow-finance-6z1m.vercel.app';
 const IS_PROD = process.env.NODE_ENV === 'production';
+const FRONTEND_URL = process.env.FRONTEND_URL || (IS_PROD ? undefined : 'http://localhost:3000');
+
+if (IS_PROD && !process.env.FRONTEND_URL) {
+  console.error('❌ FRONTEND_URL is not set in production. Password reset links and CORS will not use a fallback URL.');
+}
+
+if (!IS_PROD && !process.env.FRONTEND_URL) {
+  console.warn('⚠️ FRONTEND_URL is not set. Using http://localhost:3000 for local development.');
+}
 
 // When deployed behind a proxy (Render), trust the first proxy so secure cookies work
 if (IS_PROD) app.set('trust proxy', 1);
@@ -49,7 +56,7 @@ app.use(session({
 
 // CORS - allow requests from the configured frontend and credentials (cookies)
 app.use(cors({
-  origin: FRONTEND_URL,
+  origin: FRONTEND_URL || false,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -83,6 +90,15 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Serve React frontend
+const frontendPath = path.join(__dirname, 'build');
+
+app.use(express.static(frontendPath));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
 // Error handler
 app.use((err, req, res, next) => {
   console.error('Error:', err.message);
@@ -98,6 +114,13 @@ app.listen(PORT, () => {
   console.log(` API: http://localhost:${PORT}/api`);
   console.log(` Health: http://localhost:${PORT}/api/health`);
   console.log(`========================================\n`);
+
+  try {
+    const { testEmailConfig } = require('./services/mailService');
+    testEmailConfig();
+  } catch (err) {
+    console.error('Failed to validate email configuration:', err.message);
+  }
 }).on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
     console.error(`\n Port ${PORT} is already in use!`);

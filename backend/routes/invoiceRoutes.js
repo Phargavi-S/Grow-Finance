@@ -7,7 +7,8 @@ const {
   deleteInvoice,
   updateInvoiceStatus,
   getDashboardStats,
-  sendInvoiceReminder   
+  sendInvoiceReminder,
+  getInvoicePreviewHtml
 } = require('../controllers/invoiceController');
 
 const authMiddleware = require('../middleware/auth');
@@ -26,6 +27,8 @@ router.get('/dashboard-stats', getDashboardStats);
 
 // GET ONE
 router.get('/:id', getInvoice);
+
+router.get('/:id/preview-html', getInvoicePreviewHtml);
 
 // FULL UPDATE (edit & optionally resend)
 router.put('/:id', updateInvoice);

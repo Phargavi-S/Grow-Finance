@@ -2,7 +2,7 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 
-const generateInvoicePDF = async (data) => {
+const buildInvoiceHtml = (data) => {
   const {
     invoiceNumber,
     invoiceDate,
@@ -294,6 +294,12 @@ const generateInvoicePDF = async (data) => {
   </html>
   `;
 
+  return html;
+};
+
+const generateInvoicePDF = async (data) => {
+  const html = buildInvoiceHtml(data);
+
   // ===== PDF =====
   const browser = await puppeteer.launch({
     args: ['--no-sandbox', '--disable-setuid-sandbox']
@@ -414,4 +420,4 @@ const generatePurchaseOrderPDF = async (data) => {
   return pdf;
 };
 
-module.exports = { generateInvoicePDF, generatePurchaseOrderPDF };
+module.exports = { generateInvoicePDF, generatePurchaseOrderPDF, buildInvoiceHtml };

@@ -1,25 +1,31 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const API = process.env.REACT_APP_API_URL;
-
-const InvoiceList = ({ invoices, loading, onEdit, onDelete, onView }) => {
+const InvoiceList = ({ invoices, loading, onEdit, onDelete, onView, onStatusChange }) => {
   const [updating, setUpdating] = useState(null);
 
   const updateStatus = async (id, status) => {
     try {
       setUpdating(id);
 
-      await axios.put(
-        `${API}/invoices/${id}/status`,
+      const res = await axios.put(
+        `/invoices/${id}/status`,
         { status },
         {
           withCredentials: true,
         }
       );
+
+      if (!res.data?.success) {
+        throw new Error(res.data?.error || "Failed to update status");
+      }
+
+      if (onStatusChange) {
+        onStatusChange();
+      }
     } catch (err) {
       console.error(err);
-      alert("Failed to update status");
+      alert(err.response?.data?.error || "Failed to update status");
     } finally {
       setUpdating(null);
     }
@@ -30,7 +36,7 @@ const InvoiceList = ({ invoices, loading, onEdit, onDelete, onView }) => {
       setUpdating(id);
 
       await axios.post(
-        `${API}/invoices/${id}/send-reminder`,
+        `/invoices/${id}/send-reminder`,
         {},
         {
           withCredentials: true,
@@ -127,11 +133,10 @@ const InvoiceList = ({ invoices, loading, onEdit, onDelete, onView }) => {
 
               <td>{formatCurrency(inv.total)}</td>
 
-              <td style={{ whiteSpace: "nowrap" }}>
+              <td className="actions-cell" style={{ whiteSpace: "nowrap" }}>
                 <button
                   className="btn-secondary"
                   onClick={() => onEdit(inv)}
-                  style={{ marginRight: "6px" }}
                 >
                   Edit
                 </button>
@@ -139,7 +144,6 @@ const InvoiceList = ({ invoices, loading, onEdit, onDelete, onView }) => {
                 <button
                   className="btn-secondary"
                   onClick={() => onDelete(inv._id)}
-                  style={{ marginRight: "6px" }}
                 >
                   Delete
                 </button>
@@ -152,16 +156,14 @@ const InvoiceList = ({ invoices, loading, onEdit, onDelete, onView }) => {
                         updateStatus(inv._id, "PAID")
                       }
                       disabled={updating === inv._id}
-                      style={{ marginRight: "6px" }}
                     >
-                      Mark Paid
+                      Mark as Paid
                     </button>
 
                     <button
                       className="btn-secondary"
                       onClick={() => sendReminder(inv._id)}
                       disabled={updating === inv._id}
-                      style={{ marginRight: "6px" }}
                     >
                       {updating === inv._id
                         ? "Sending..."

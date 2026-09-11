@@ -26,8 +26,8 @@ const CustomerList = ({ customers = [], loading, onEdit, onDelete }) => {
               <td>{c.email}</td>
               <td>{c.phone || '-'}</td>
               <td>
-                <button className="btn-outline" style={{ marginRight: '8px' }} onClick={() => onEdit(c)}>Edit</button>
-                <button className="btn-outline" style={{ color: 'var(--danger)' }} onClick={() => onDelete(c._id)}>Delete</button>
+                <button className="btn-secondary" style={{ marginRight: '8px' }} onClick={() => onEdit(c)}>Edit</button>
+                <button className="btn-secondary" onClick={() => onDelete(c._id)}>Delete</button>
               </td>
             </tr>
           ))}

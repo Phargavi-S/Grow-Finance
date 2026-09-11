@@ -11,6 +11,7 @@ const Invoices = ({ onLogout, user }) => {
   const [showForm, setShowForm] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [previewInvoice, setPreviewInvoice] = useState(null);
+  const [previewHtml, setPreviewHtml] = useState('');
   const [previewLoading, setPreviewLoading] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -37,8 +38,12 @@ const Invoices = ({ onLogout, user }) => {
   const handlePreview = async (id) => {
     setPreviewLoading(true);
     try {
-      const res = await axios.get(`/invoices/${id}`, { withCredentials: true });
+      const [res, htmlRes] = await Promise.all([
+        axios.get(`/invoices/${id}`, { withCredentials: true }),
+        axios.get(`/invoices/${id}/preview-html`, { withCredentials: true })
+      ]);
       setPreviewInvoice(res.data.invoice);
+      setPreviewHtml(htmlRes.data.html || '');
     } catch (error) {
       console.error('Error fetching invoice preview:', error);
       alert('Failed to load invoice preview');
@@ -90,18 +95,23 @@ const Invoices = ({ onLogout, user }) => {
             onEdit={handleEdit}
             onDelete={handleDelete}
             onView={handlePreview}
+            onStatusChange={fetchInvoices}
           />
 
           {previewInvoice && (
             <InvoicePreviewModal
               invoice={previewInvoice}
+              previewHtml={previewHtml}
               loading={previewLoading}
-              onClose={() => setPreviewInvoice(null)}
+              onClose={() => { setPreviewInvoice(null); setPreviewHtml(''); }}
               onConfirm={async () => {
-                // Re-send current invoice by calling update with sendEmail flag
                 try {
-                  await axios.put(`/invoices/${previewInvoice._id}`, { sendEmail: true }, { withCredentials: true });
-                  alert('Invoice resent successfully');
+                  const res = await axios.put(`/invoices/${previewInvoice._id}`, { sendEmail: true }, { withCredentials: true });
+                  if (res.data?.emailSent) {
+                    alert('Invoice resent successfully');
+                  } else {
+                    alert(res.data?.emailError || 'Invoice saved but email was not sent');
+                  }
                 } catch (err) {
                   console.error(err);
                   alert('Failed to resend invoice');

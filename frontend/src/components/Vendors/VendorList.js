@@ -26,8 +26,8 @@ const VendorList = ({ vendors = [], loading, onEdit, onDelete }) => {
               <td>{v.billingCity || '-'}</td>
               <td>{v.paymentTerms || '-'}</td>
               <td>
-                <button className="btn-outline" style={{ marginRight: '8px' }} onClick={() => onEdit(v)}>Edit</button>
-                <button className="btn-outline" style={{ color: 'var(--danger)' }} onClick={() => onDelete(v._id)}>Delete</button>
+                <button className="btn-secondary" style={{ marginRight: '8px' }} onClick={() => onEdit(v)}>Edit</button>
+                <button className="btn-secondary" onClick={() => onDelete(v._id)}>Delete</button>
               </td>
             </tr>
           ))}

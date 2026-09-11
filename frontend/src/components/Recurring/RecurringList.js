@@ -73,7 +73,7 @@ const RecurringList = () => {
                     <button className="btn-secondary" onClick={() => handleResume(p._id)} style={{ marginRight: 6 }}>Resume</button>
                   )}
                   <button className="btn-secondary" onClick={() => handleTrigger(p._id)} style={{ marginRight: 6 }}>Trigger</button>
-                  <button className="btn-danger" onClick={() => handleDelete(p._id)}>Delete</button>
+                  <button className="btn-secondary" onClick={() => handleDelete(p._id)}>Delete</button>
                 </td>
               </tr>
             )) : (

@@ -6,7 +6,7 @@ const Customer = require('../models/Customer');
 const Invoice = require('../models/Invoice');
 const PurchaseOrder = require('../models/PurchaseOrder');
 
-const { generateInvoicePDF } = require('../services/pdfService');
+const { generateInvoicePDF, buildInvoiceHtml } = require('../services/pdfService');
 const { sendInvoiceEmail, sendReminderEmail } = require('../services/mailService');
 
 // ===== ENV VARIABLES =====
@@ -46,6 +46,77 @@ const saveTempPDF = (buffer, invoiceNumber) => {
     const filePath = path.join(os.tmpdir(), `invoice_${invoiceNumber}.pdf`);
     fs.writeFileSync(filePath, buffer);
     return filePath;
+};
+
+const buildSellerBlock = () => {
+    const fullStreet = [COMPANY_ADDRESS_LINE1, COMPANY_ADDRESS_LINE2]
+        .filter(Boolean)
+        .join(', ');
+    const [postalCode, ...cityParts] = (COMPANY_CITY_STATE_ZIP || '').split(' ');
+    const city = cityParts.join(' ');
+    return {
+        fullStreet,
+        postalCode,
+        city,
+        seller: {
+            name: COMPANY_NAME,
+            street: fullStreet,
+            postalCode,
+            city,
+            country: COMPANY_COUNTRY,
+            phone: COMPANY_PHONE,
+            email: COMPANY_EMAIL,
+            website: COMPANY_WEBSITE,
+            vatId: COMPANY_VAT_ID,
+            taxNumber: COMPANY_TAX_NUMBER,
+            owner: COMPANY_OWNER,
+            bank: COMPANY_BANK,
+            iban: COMPANY_IBAN,
+            bic: COMPANY_BIC
+        }
+    };
+};
+
+const buildCustomerBlock = (customer) => ({
+    name: customer.name || '',
+    street: customer.billingAddress || '',
+    postalCode: customer.billingPin || '',
+    city: customer.billingCity || '',
+    state: customer.billingState || '',
+    country: customer.billingCountry || ''
+});
+
+const buildInvoicePdfData = (invoiceNumber, invoice, customer, items, vatRate, closingText) => {
+    const { seller } = buildSellerBlock();
+    return {
+        invoiceNumber,
+        invoiceDate: new Date(invoice.date || Date.now()).toLocaleDateString('en-US'),
+        dueDate: new Date(invoice.dueDate || Date.now()).toLocaleDateString('en-US'),
+        serviceDate: new Date().toLocaleDateString('en-US'),
+        customerNumber: customer.customerNumber || '1001',
+        seller,
+        customer: buildCustomerBlock(customer),
+        items: items || [],
+        vatRate,
+        logoPath: LOGO_PATH,
+        closingText: closingText || ''
+    };
+};
+
+const generateNextOrderNumber = async () => {
+    const lastInvoice = await Invoice.findOne({
+        orderNumber: { $exists: true, $nin: [null, ''] }
+    }).sort({ orderNumber: -1 });
+
+    let nextNumber = 1;
+    if (lastInvoice && lastInvoice.orderNumber) {
+        const num = parseInt(String(lastInvoice.orderNumber).replace(/^ORD-/, ''), 10);
+        if (!Number.isNaN(num)) {
+            nextNumber = num + 1;
+        }
+    }
+
+    return `ORD-${String(nextNumber).padStart(6, '0')}`;
 };
 
 // ===== CREATE INVOICE =====
@@ -106,8 +177,11 @@ const createInvoice = async (req, res) => {
 const invoiceNumber =
     `RE-${String(nextNumber).padStart(6, '0')}`;
 
+        const orderNumber = await generateNextOrderNumber();
+
         const invoice = new Invoice({
             invoiceNumber,
+            orderNumber,
             customerId,
             items: processedItems,
             date: req.body.invoiceDate ? new Date(req.body.invoiceDate) : new Date(),
@@ -123,72 +197,51 @@ const invoiceNumber =
 
         await invoice.save();
 
+        let emailSent = false;
+        let emailError = null;
+
         // If requested, generate PDF and send email
-        if (sendEmail && customer.email) {
+        if (sendEmail) {
             try {
-                const fullStreet = [COMPANY_ADDRESS_LINE1, COMPANY_ADDRESS_LINE2]
-                    .filter(Boolean)
-                    .join(', ');
+                if (!customer.email) {
+                    throw Object.assign(new Error('Customer email not available'), { emailErrorType: 'invalid_recipient' });
+                }
 
-                const [postalCode, ...cityParts] = (COMPANY_CITY_STATE_ZIP || '').split(' ');
-                const city = cityParts.join(' ');
-
-                const pdfData = {
+                const pdfData = buildInvoicePdfData(
                     invoiceNumber,
-                    invoiceDate: new Date(invoice.date).toLocaleDateString('en-US'),
-                    dueDate: new Date(invoice.dueDate).toLocaleDateString('en-US'),
-                    serviceDate: new Date().toLocaleDateString('en-US'),
-                    customerNumber: customer.customerNumber || '1001',
-                    seller: {
-                        name: COMPANY_NAME,
-                        street: fullStreet,
-                        postalCode,
-                        city,
-                        country: COMPANY_COUNTRY,
-                        phone: COMPANY_PHONE,
-                        email: COMPANY_EMAIL,
-                        website: COMPANY_WEBSITE,
-                        vatId: COMPANY_VAT_ID,
-                        taxNumber: COMPANY_TAX_NUMBER,
-                        owner: COMPANY_OWNER,
-                        bank: COMPANY_BANK,
-                        iban: COMPANY_IBAN,
-                        bic: COMPANY_BIC
-                    },
-                    customer: {
-                        name: customer.name || '',
-                        street: customer.billingAddress || '',
-                        postalCode: customer.billingPin || '',
-                        city: customer.billingCity || '',
-                        state: customer.billingState || '',
-                        country: customer.billingCountry || ''
-                    },
-                    items: processedItems,
+                    invoice,
+                    customer,
+                    processedItems,
                     vatRate,
-                    logoPath: LOGO_PATH,
-                    closingText: closingText || ''
-                };
+                    closingText || ''
+                );
 
                 const pdfBuffer = await generateInvoicePDF(pdfData);
                 const pdfPath = saveTempPDF(pdfBuffer, invoiceNumber);
 
-                await sendInvoiceEmail(
+                const emailResult = await sendInvoiceEmail(
                     {
                         invoiceNumber,
                         total,
                         date: invoice.date,
-                        dueDate: invoice.dueDate
+                        dueDate: invoice.dueDate,
+                        status: invoice.status
                     },
                     customer,
                     pdfPath
                 );
+                emailSent = !emailResult?.skipped;
+                if (emailResult?.skipped) {
+                    emailError = 'Email sending is disabled (EMAIL_ENABLED=false)';
+                }
             } catch (emailErr) {
-                console.error('Email sending error on create:', emailErr);
+                emailError = emailErr.message;
+                console.error('Email sending error on create:', emailErr.emailErrorType || 'unknown', emailErr.message);
             }
         }
 
         // Return the created invoice as JSON (frontend expects JSON)
-        res.json({ success: true, invoice });
+        res.json({ success: true, invoice, emailSent, emailError });
 
     } catch (error) {
         console.error('❌ Invoice Error:', error);
@@ -246,74 +299,51 @@ const updateInvoice = async (req, res) => {
             return res.status(404).json({ success: false, error: 'Invoice not found' });
         }
 
+        let emailSent = false;
+        let emailError = null;
+
         // If requested, generate PDF and send email for the updated invoice
         if (sendEmail) {
             try {
                 const customer = await Customer.findById(updated.customerId);
-                if (customer && customer.email) {
-                    const fullStreet = [COMPANY_ADDRESS_LINE1, COMPANY_ADDRESS_LINE2]
-                        .filter(Boolean)
-                        .join(', ');
+                if (!customer || !customer.email) {
+                    throw Object.assign(new Error('Customer email not available'), { emailErrorType: 'invalid_recipient' });
+                }
 
-                    const [postalCode, ...cityParts] = (COMPANY_CITY_STATE_ZIP || '').split(' ');
-                    const city = cityParts.join(' ');
+                const pdfData = buildInvoicePdfData(
+                    updated.invoiceNumber,
+                    updated,
+                    customer,
+                    updated.items || [],
+                    req.body.vatRate || 19,
+                    updated.closingText || ''
+                );
 
-                    const pdfData = {
+                const pdfBuffer = await generateInvoicePDF(pdfData);
+                const pdfPath = saveTempPDF(pdfBuffer, updated.invoiceNumber || updated._id);
+
+                const emailResult = await sendInvoiceEmail(
+                    {
                         invoiceNumber: updated.invoiceNumber,
-                        invoiceDate: new Date(updated.date).toLocaleDateString('en-US'),
-                        dueDate: new Date(updated.dueDate).toLocaleDateString('en-US'),
-                        serviceDate: new Date().toLocaleDateString('en-US'),
-                        customerNumber: customer.customerNumber || '1001',
-                        seller: {
-                            name: COMPANY_NAME,
-                            street: fullStreet,
-                            postalCode,
-                            city,
-                            country: COMPANY_COUNTRY,
-                            phone: COMPANY_PHONE,
-                            email: COMPANY_EMAIL,
-                            website: COMPANY_WEBSITE,
-                            vatId: COMPANY_VAT_ID,
-                            taxNumber: COMPANY_TAX_NUMBER,
-                            owner: COMPANY_OWNER,
-                            bank: COMPANY_BANK,
-                            iban: COMPANY_IBAN,
-                            bic: COMPANY_BIC
-                        },
-                        customer: {
-                            name: customer.name || '',
-                            street: customer.billingAddress || '',
-                            postalCode: customer.billingPin || '',
-                            city: customer.billingCity || '',
-                            state: customer.billingState || '',
-                            country: customer.billingCountry || ''
-                        },
-                        items: updated.items || [],
-                        vatRate: req.body.vatRate || 19,
-                        logoPath: LOGO_PATH,
-                        closingText: updated.closingText || ''
-                    };
-
-                    const pdfBuffer = await generateInvoicePDF(pdfData);
-                    const pdfPath = saveTempPDF(pdfBuffer, updated.invoiceNumber || updated._id);
-
-                    await sendInvoiceEmail(
-                        {
-                            invoiceNumber: updated.invoiceNumber,
-                            total: updated.total,
-                            date: updated.date,
-                            dueDate: updated.dueDate
-                        },
-                        customer,
-                        pdfPath
-                    );
+                        total: updated.total,
+                        date: updated.date,
+                        dueDate: updated.dueDate,
+                        status: updated.status
+                    },
+                    customer,
+                    pdfPath
+                );
+                emailSent = !emailResult?.skipped;
+                if (emailResult?.skipped) {
+                    emailError = 'Email sending is disabled (EMAIL_ENABLED=false)';
                 }
             } catch (emailErr) {
-                console.error('Email sending error on update:', emailErr);
+                emailError = emailErr.message;
+                console.error('Email sending error on update:', emailErr.emailErrorType || 'unknown', emailErr.message);
             }
         }
 
-        res.json({ success: true, invoice: updated });
+        res.json({ success: true, invoice: updated, emailSent, emailError });
 
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -351,7 +381,7 @@ const sendInvoiceReminder = async (req, res) => {
             return res.status(400).json({ error: 'Customer email not found' });
         }
 
-        await sendReminderEmail(
+        const emailResult = await sendReminderEmail(
             {
                 invoiceNumber: invoice.invoiceNumber,
                 total: invoice.total,
@@ -360,13 +390,45 @@ const sendInvoiceReminder = async (req, res) => {
             customer
         );
 
+        if (emailResult?.skipped) {
+            return res.status(503).json({ success: false, error: 'Email sending is disabled (EMAIL_ENABLED=false)' });
+        }
+
         invoice.lastReminderSent = new Date();
         await invoice.save();
 
         res.json({ success: true, message: 'Reminder sent successfully' });
 
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Send reminder error:', error.emailErrorType || 'unknown', error.message);
+        res.status(500).json({ error: error.message, emailErrorType: error.emailErrorType || 'unknown' });
+    }
+};
+
+const getInvoicePreviewHtml = async (req, res) => {
+    try {
+        const invoice = await Invoice.findById(req.params.id).populate('customerId');
+
+        if (!invoice) {
+            return res.status(404).json({ success: false, error: 'Invoice not found' });
+        }
+
+        const customer = invoice.customerId || {};
+
+        const pdfData = buildInvoicePdfData(
+            invoice.invoiceNumber,
+            invoice,
+            customer,
+            invoice.items || [],
+            19,
+            invoice.closingText || ''
+        );
+
+        const html = buildInvoiceHtml(pdfData);
+        res.json({ success: true, html });
+    } catch (error) {
+        console.error('Invoice preview error:', error.message);
+        res.status(500).json({ success: false, error: error.message });
     }
 };
 
@@ -375,10 +437,14 @@ const updateInvoiceStatus = async (req, res) => {
     try {
         const { status } = req.body;
 
+        if (!status || !['PAID', 'UNPAID'].includes(status)) {
+            return res.status(400).json({ success: false, error: 'Status must be PAID or UNPAID' });
+        }
+
         const invoice = await Invoice.findByIdAndUpdate(
             req.params.id,
-            { status, updatedAt: new Date() },
-            { new: true }
+            { status },
+            { new: true, runValidators: true }
         );
 
         if (!invoice) {
@@ -435,5 +501,6 @@ module.exports = {
     deleteInvoice,
     updateInvoiceStatus,
     getDashboardStats,
-    sendInvoiceReminder
+    sendInvoiceReminder,
+    getInvoicePreviewHtml
 };

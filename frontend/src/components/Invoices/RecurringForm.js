@@ -130,7 +130,7 @@ const RecurringForm = ({ plan, onSuccess, onCancel }) => {
                 </td>
                 <td><input type="number" min="0" step="1" value={it.quantity} onChange={e => updateItem(idx,'quantity', e.target.value)} /></td>
                 <td><input type="number" min="0" step="0.01" value={it.rate} onChange={e => updateItem(idx,'rate', e.target.value)} /></td>
-                <td>{items.length>1 && <button className="btn-danger" onClick={() => removeRow(idx)}>Remove</button>}</td>
+                <td>{items.length>1 && <button className="btn-secondary" onClick={() => removeRow(idx)}>Remove</button>}</td>
               </tr>
             ))}
           </tbody>

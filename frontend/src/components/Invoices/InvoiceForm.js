@@ -172,7 +172,11 @@ const InvoiceForm = ({ invoice, onSuccess, onCancel }) => {
 
       if (onSuccess) onSuccess();
       resetForm();
-      alert(invoice ? 'Invoice updated successfully!' : 'Invoice created successfully!');
+      if (sendEmail && response.data && response.data.emailSent === false) {
+        alert(`Invoice saved, but email was not sent: ${response.data.emailError || 'Unknown email error'}`);
+      } else {
+        alert(invoice ? 'Invoice updated successfully!' : 'Invoice created successfully!');
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Error creating invoice');
     } finally {

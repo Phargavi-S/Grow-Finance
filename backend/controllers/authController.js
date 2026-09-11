@@ -1,11 +1,9 @@
 const crypto = require('crypto');
-const { Resend } = require('resend');
 const User = require('../models/User');
+const { getResendClient } = require('../services/mailService');
 
 const SESSION_SHORT = 24 * 60 * 60 * 1000;
 const SESSION_LONG = 30 * 24 * 60 * 60 * 1000;
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 const setSessionUser = (req, user) => {
   req.session.userId = user._id;
@@ -176,15 +174,28 @@ const forgotPassword = async (req, res) => {
     user.resetPasswordExpires = Date.now() + 60 * 60 * 1000;
     await user.save();
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    if (!process.env.FRONTEND_URL) {
+      console.error('❌ FRONTEND_URL is not configured — refusing to send password reset with an incorrect link');
+      return res.status(500).json({ success: false, error: 'Password reset is not configured (FRONTEND_URL missing).' });
+    }
+
+    const frontendUrl = process.env.FRONTEND_URL.replace(/\/$/, '');
     const resetLink = `${frontendUrl}/reset-password/${resetToken}`;
 
-  try {
-  await resend.emails.send({
-    from: process.env.EMAIL_FROM,
-    to: user.email,
-    subject: 'Reset Your GROW FINANCE Password',
-    html: `
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error('RESEND_API_KEY is not configured');
+    }
+
+    if (!process.env.EMAIL_FROM) {
+      throw new Error('EMAIL_FROM is not configured');
+    }
+
+    const resend = getResendClient();
+    const { data, error } = await resend.emails.send({
+      from: process.env.EMAIL_FROM,
+      to: user.email,
+      subject: 'Reset Your GROW FINANCE Password',
+      html: `
       <div style="font-family: Inter, sans-serif; max-width:560px;margin:auto;">
         <h2 style="color:#0a1324;">GROW FINANCE</h2>
 
@@ -210,16 +221,19 @@ const forgotPassword = async (req, res) => {
         </p>
       </div>
     `
-  });
-} catch (mailErr) {
-  console.error('Resend Email Error:', mailErr);
-  console.log('Reset link:', resetLink);
-}
+    });
+
+    if (error) {
+      console.error('Resend password reset error:', error);
+      throw new Error(error.message || 'Failed to send password reset email');
+    }
+
+    console.log('Password reset email sent successfully');
+    console.log('Resend email ID:', data?.id);
 
     res.json({
       success: true,
-      message: 'If an account exists with this email, a reset link has been sent.',
-      ...(process.env.NODE_ENV !== 'production' ? { resetLink } : {})
+      message: 'If an account exists with this email, a reset link has been sent.'
     });
   } catch (error) {
     console.error('Forgot password error:', error);

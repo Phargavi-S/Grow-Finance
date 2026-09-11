@@ -16,7 +16,7 @@ const PublicNavbar = ({ transparent = false }) => {
     <nav className={`gf-navbar ${transparent ? 'gf-navbar-transparent' : ''}`}>
       <div className="gf-navbar-inner">
         <div onClick={() => setMenuOpen(false)}>
-          <Logo size="sm" variant="light" linkTo="/" />
+          <Logo size="sm" variant="light" linkTo="/" showText={false} className="gf-navbar-logo" />
         </div>
 
         <button
